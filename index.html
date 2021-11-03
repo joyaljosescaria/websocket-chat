@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat websocket</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Josefin Sans', sans-serif;
+        }
+
+        h1 {
+            text-align: center;
+            background-color: rgb(3, 73, 73);
+            padding: 10px;
+            color: rgb(255, 255, 255);
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        #messages {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            max-height: 80vh;
+            overflow: scroll;
+            word-wrap: break-word;
+        }
+
+        p {
+            background-color: rgb(58, 6, 88);
+            padding: 10px;
+            width: 100vw;
+            margin-bottom: 10px;
+            color: whitesmoke;
+            font-weight: 50;
+            margin-left: 2rem;
+        }
+
+        #messages::-webkit-scrollbar {
+            display: none;
+        }
+
+        #footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgb(3, 73, 73);
+        }
+        #messageBox {
+            padding: 1rem;
+            width: 90%;
+            border: 1px solid rgb(3, 73, 73);
+            font-size: 1rem;
+        }
+
+        #messageBox:focus {
+            outline: none;
+            border: 2px solid rgb(74, 230, 74);
+        }
+
+        #send {
+            padding: 1rem;
+            width: 9%;
+            background-color: rgb(3, 73, 73);
+            color: whitesmoke;
+            font-size: 0.8rem;
+            cursor: pointer;
+            border: 0;
+            outline: none;
+        }
+
+        .mymessage{
+            display: flex;
+            justify-content: flex-end;
+            background-color: rgb(14 116 102);
+            margin-left: 0px;
+            margin-right: 2rem;
+        }
+
+        .connection_msg{
+            display: flex;
+            justify-content: center;
+            background-color: rgb(59, 6, 252);
+        }
+
+        #send:hover {
+            background-color: rgb(41, 139, 139);
+            color: whitesmoke;
+        }
+
+        @media screen and (max-width: 768px) {
+            #messageBox {
+                width: 70%;
+            }
+            
+
+            #footer {
+                justify-content: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>WebSocket Chat App</h1>
+    <div id="messages">
+
+    </div>
+    <div id="footer">
+        <input type="text" id="messageBox" />
+        <button id="send">Send Message</button>
+    </div>
+    <script>
+        const sendBtn = document.getElementById('send');
+        const messages = document.getElementById('messages');
+        const messageBox = document.getElementById('messageBox');
+
+        let ws;
+
+        console.log(messages)
+
+        function showMessage(message , isMe , cntd) {
+            const h1 = document.createElement('p');
+            h1.innerText = message;
+            if(isMe){
+                h1.classList.add('mymessage');
+            }
+            else if(cntd){
+                h1.classList.add('connection_msg');
+                h1.style.marginLeft = "0px"; 
+            }
+            messages.appendChild(h1);
+            messages.scrollTop = messages.scrollHeight;
+            messageBox.value = '';
+        }
+
+        if (ws) {
+            ws.onerror = ws.onopen = ws.onclose = null;
+            ws.close();
+        }
+
+        ws = new WebSocket('ws://localhost:8081');
+        ws.onopen = () => {
+            console.log('Connected');
+            showMessage('Connected to server' , isMe = false , cntd = true);
+        };
+        ws.onmessage = ({ data }) => {
+            console.log(data);
+            showMessage(JSON.parse(data));
+        };
+        ws.onclose = () => {
+            ws = null;
+        }
+
+        sendBtn.addEventListener('click', () => {
+            if (!ws) {
+                showMessage('You are not connected to server');
+                return;
+            }
+
+            ws.send(messageBox.value);
+            showMessage(messageBox.value , isMe=true);
+        });
+    </script>
+</body>
+
+</html>
